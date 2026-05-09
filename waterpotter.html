@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MySmartPlant - Plant Monitor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #e8f4f8 0%, #d4e9f2 100%);
+            color: #333;
+            overflow: hidden;
+        }
+
+        .container {
+            height: 100vh;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        .header {
+            padding: 24px 20px 16px;
+            background: linear-gradient(135deg, #b3d9e8 0%, #a0cfe0 100%);
+            border-bottom: none;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .plant-name {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .temp-display {
+            font-size: 20px;
+            font-weight: 600;
+            color: #00a8ff;
+            background: rgba(0, 168, 255, 0.1);
+            padding: 6px 12px;
+            border-radius: 20px;
+        }
+
+        .humidity-bar {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        .humidity-bar-fill {
+            flex: 1;
+            height: 6px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .humidity-bar-fill-actual {
+            height: 100%;
+            background: linear-gradient(90deg, #a0cfe0, #00a8ff);
+            transition: width 0.5s ease;
+        }
+
+        .humidity-percent {
+            font-size: 12px;
+            color: #666;
+            min-width: 35px;
+        }
+
+        .main-display {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            position: relative;
+            min-height: 400px;
+            background: linear-gradient(135deg, #e8f4f8 0%, #d4e9f2 100%);
+        }
+
+        .soil-moisture-ring {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            margin: 0 auto;
+        }
+
+        .soil-moisture-circle {
+            width: 100%;
+            height: 100%;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .soil-label {
+            font-size: 14px;
+            color: #666;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .soil-percent {
+            font-size: 72px;
+            font-weight: 900;
+            color: #1a1a1a;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .soil-or {
+            font-size: 12px;
+            color: #00a8ff;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .soil-value {
+            font-size: 48px;
+            font-weight: 900;
+            color: #00a8ff;
+        }
+
+        .more-info-btn {
+            margin-top: 24px;
+            padding: 14px 40px;
+            background: linear-gradient(135deg, #d4e9f2, #c0dfe8);
+            border: none;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .more-info-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .more-info-btn:active {
+            transform: translateY(0);
+        }
+
+        .info-section {
+            padding: 24px 20px;
+            background: white;
+            border-radius: 40px 40px 0 0;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .temp-cards-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .info-card {
+            background: linear-gradient(135deg, #e8f4f8, #d4e9f2);
+            border: none;
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+        }
+
+        .info-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-card .label {
+            font-size: 12px;
+            color: #666;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            text-transform: none;
+        }
+
+        .info-card .value {
+            font-size: 32px;
+            font-weight: 900;
+            color: #1a1a1a;
+        }
+
+        .info-card .unit {
+            font-size: 16px;
+            color: #00a8ff;
+            margin-left: 4px;
+        }
+
+        .full-width-card {
+            background: linear-gradient(135deg, #e8f4f8, #d4e9f2);
+            border: none;
+            padding: 16px 20px;
+            border-radius: 14px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+        }
+
+        .full-width-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .full-width-card .label {
+            font-size: 11px;
+            color: #999;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .full-width-card .value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        .full-width-card .value-secondary {
+            color: #00a8ff;
+        }
+
+        .brand-name {
+            text-align: center;
+            padding: 24px 20px 32px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a1a;
+            background: white;
+            border-radius: 0 0 16px 16px;
+            letter-spacing: 1px;
+        }
+
+        .scroll-indicator {
+            text-align: center;
+            padding: 16px;
+            color: #00a8ff;
+            font-size: 12px;
+            animation: pulse 2s infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                opacity: 0.5;
+                transform: translateY(0);
+            }
+            50% { 
+                opacity: 1;
+                transform: translateY(4px);
+            }
+        }
+
+        .editable-name {
+            cursor: pointer;
+            position: relative;
+            display: inline-block;
+            transition: color 0.2s ease;
+        }
+
+        .editable-name:hover {
+            color: #00a8ff;
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 16px 16px 12px;
+            }
+
+            .plant-name {
+                font-size: 20px;
+            }
+
+            .temp-display {
+                font-size: 16px;
+            }
+
+            .soil-moisture-ring {
+                width: 220px;
+                height: 220px;
+            }
+
+            .soil-percent {
+                font-size: 56px;
+            }
+
+            .soil-value {
+                font-size: 40px;
+            }
+
+            .temp-cards-row {
+                grid-template-columns: 1fr;
+            }
+
+            .main-display {
+                padding: 30px 16px;
+                min-height: 350px;
+            }
+
+            .info-section {
+                padding: 20px 16px;
+            }
+        }
+
+        @media (max-height: 800px) {
+            .main-display {
+                padding: 20px;
+                min-height: 300px;
+            }
+
+            .soil-moisture-ring {
+                width: 240px;
+                height: 240px;
+            }
+
+            .soil-percent {
+                font-size: 60px;
+            }
+
+            .soil-value {
+                font-size: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="container">
+        <div class="header">
+            <div class="header-top">
+                <div class="plant-name" id="plantName">Dandelion</div>
+                <div class="temp-display" id="tempDisplay">21.5°C</div>
+            </div>
+            <div class="humidity-bar">
+                <div class="humidity-bar-fill">
+                    <div class="humidity-bar-fill-actual" id="humidityFill" style="width: 100%;"></div>
+                </div>
+                <div class="humidity-percent" id="humidityPercent">100%</div>
+            </div>
+        </div>
+
+        <div class="main-display">
+            <div class="soil-moisture-ring">
+                <div class="soil-moisture-circle">
+                    <div class="soil-label">Soil Mouistre</div>
+                    <div class="soil-percent" id="soilPercent">100%</div>
+                    <div class="soil-or">OR</div>
+                    <div class="soil-value" id="soilValue">350</div>
+                </div>
+            </div>
+        </div>
+
+        <button class="more-info-btn" onclick="scrollToInfo()">More Info</button>
+
+        <div class="info-section">
+            <div class="temp-cards-row">
+                <div class="info-card">
+                    <div class="label">Current Temp</div>
+                    <div class="value"><span id="tempRecommended1">23.9</span><span class="unit">°C</span></div>
+                </div>
+                <div class="info-card" id="editableTempCard" style="cursor: pointer;">
+                    <div class="label">Target Temp</div>
+                    <div class="value"><span id="tempRecommended2">21.5</span><span class="unit">°C</span></div>
+                </div>
+            </div>
+
+            <div class="full-width-card">
+                <div class="label">Water</div>
+                <div class="value"><span id="waterValue">350</span></div>
+            </div>
+
+            <div class="full-width-card">
+                <div class="label">Water Percent</div>
+                <div class="value"><span id="waterPercent">100%</span></div>
+            </div>
+
+            <div class="full-width-card">
+                <div class="label">Humidity</div>
+                <div class="value"><span id="humidityValue">100%</span></div>
+            </div>
+
+            <div class="full-width-card">
+                <div class="label">Temperature</div>
+                <div class="value"><span id="temperatureValue">21.5</span><span class="unit">°C</span></div>
+            </div>
+
+            <div class="full-width-card">
+                <div class="label">Status</div>
+                <div class="value"><span id="status">Connected</span> <span class="value-secondary" id="lastUpdate">| Last update 12:00</span></div>
+            </div>
+
+            <div class="full-width-card" id="nameCard" style="cursor: pointer;">
+                <div class="label">Name/Plant</div>
+                <div class="value"><span id="plantNameEdit">Dandelion</span> <span class="value-secondary">(Tap to edit)</span></div>
+            </div>
+
+            <div class="full-width-card">
+                <div class="label">Server</div>
+                <div class="value" style="font-size: 12px; word-break: break-all; color: #666; font-family: 'Courier New', monospace;">
+                    <span id="serverUrl">http://192.168.2.39:5000/api/sensors</span>
+                </div>
+            </div>
+
+            <div class="scroll-indicator">
+                ↓
+            </div>
+        </div>
+
+        <div class="brand-name">MySmartPlant</div>
+    </div>
+
+    <script>
+        const apiUrl = 'http://192.168.2.39:5000/api/sensors';
+        let updateCount = 0;
+
+        function formatTime(date) {
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${hours}:${minutes}`;
+        }
+
+        async function fetchData() {
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                console.log('API Response:', data);
+                
+                // Parse the data with actual API field names
+                const humidity = data.humidity !== undefined ? data.humidity : 53;
+                const temperature = data.temperature !== undefined ? data.temperature : 23.9;
+                const waterLevel = data.water_level !== undefined ? data.water_level : 331;
+                const waterPercentage = data.water_percentage !== undefined ? data.water_percentage : 94;
+                const status = data.status !== undefined ? data.status : 'connected';
+                const timestamp = data.timestamp !== undefined ? data.timestamp : Date.now() / 1000;
+
+                // Use default values for fields not in API
+                const soilMoisture = waterPercentage; // Use water percentage as soil moisture display
+                const soilValue = waterLevel; // Use water level as the numeric value
+                const tempRecommended = 21.5; // Default recommended temp
+                const plantName = 'Plant Monitor'; // Default name
+
+                updateUI({
+                    soilMoisture,
+                    soilValue,
+                    humidity,
+                    temperature,
+                    tempRecommended,
+                    water: waterLevel,
+                    waterPercent: waterPercentage,
+                    plantName,
+                    status: status.charAt(0).toUpperCase() + status.slice(1),
+                    timestamp
+                });
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                if (updateCount === 0) {
+                    console.log('Using demo values - API unreachable');
+                    // Show demo values on first load if API fails
+                    updateUI({
+                        soilMoisture: 94,
+                        soilValue: 331,
+                        humidity: 53,
+                        temperature: 23.9,
+                        tempRecommended: 21.5,
+                        water: 331,
+                        waterPercent: 94,
+                        plantName: 'Plant Monitor',
+                        status: 'Offline',
+                        timestamp: Date.now() / 1000
+                    });
+                }
+            } finally {
+                updateCount++;
+            }
+        }
+
+        function updateUI(data) {
+            // Update soil moisture
+            document.getElementById('soilPercent').textContent = Math.round(data.soilMoisture) + '%';
+            document.getElementById('soilValue').textContent = Math.round(data.soilValue);
+
+            // Update header
+            document.getElementById('plantName').textContent = data.plantName;
+            document.getElementById('plantNameEdit').textContent = data.plantName;
+            const tempRounded = Math.round(data.temperature * 10) / 10;
+            document.getElementById('tempDisplay').textContent = tempRounded + '°C';
+
+            // Update humidity
+            const humidityRounded = Math.round(data.humidity);
+            document.getElementById('humidityPercent').textContent = humidityRounded + '%';
+            document.getElementById('humidityFill').style.width = Math.min(100, Math.max(0, humidityRounded)) + '%';
+            document.getElementById('humidityValue').textContent = humidityRounded + '%';
+
+            // Update temperature cards - first shows actual API temperature
+            document.getElementById('temperatureValue').textContent = tempRounded;
+            document.getElementById('tempRecommended1').textContent = tempRounded;
+
+            // Update water
+            const waterRounded = Math.round(data.water);
+            document.getElementById('waterValue').textContent = waterRounded;
+            const waterPercentRounded = Math.round(data.waterPercent);
+            document.getElementById('waterPercent').textContent = waterPercentRounded + '%';
+
+            // Update status
+            document.getElementById('status').textContent = data.status;
+            document.getElementById('lastUpdate').textContent = '| Last update ' + formatTime(new Date());
+
+            // Update server URL
+            document.getElementById('serverUrl').textContent = 'http://' + apiUrl.replace('http://', '');
+        }
+
+        function scrollToInfo() {
+            const infoSection = document.querySelector('.info-section');
+            infoSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Fetch data on load and every 5 seconds
+        fetchData();
+        setInterval(fetchData, 5000);
+
+        // Plant name editing
+        document.getElementById('nameCard').addEventListener('click', function() {
+            const currentName = document.getElementById('plantNameEdit').textContent.trim();
+            const newName = prompt('Enter plant name:', currentName);
+            if (newName && newName.trim()) {
+                document.getElementById('plantName').textContent = newName.trim();
+                document.getElementById('plantNameEdit').textContent = newName.trim();
+            }
+        });
+
+        // Target temperature editing
+        document.getElementById('editableTempCard').addEventListener('click', function() {
+            const currentTemp = document.getElementById('tempRecommended2').textContent.trim();
+            const newTemp = prompt('Enter target temperature (°C):', currentTemp);
+            if (newTemp && !isNaN(parseFloat(newTemp))) {
+                const tempValue = Math.round(parseFloat(newTemp) * 10) / 10;
+                document.getElementById('tempRecommended2').textContent = tempValue;
+            }
+        });
+    </script>
+</body>
+</html>
